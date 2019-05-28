@@ -11,11 +11,28 @@ namespace GC_Final
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        Camera camera;
+        Arena arena;
+        Maze maze;
+        Skybox skybox;
+        BasicEffect effect;
+        SamplerState clampTextureAddressMode;
+        Texture2D texture;
+
+        float moveScale = 4.5f;
+        float rotateScale = MathHelper.PiOver2 + 1;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            graphics.PreferredBackBufferHeight = 720;
+            graphics.PreferredBackBufferWidth = 1280;
+
+            #if !DEBUG
+                graphics.IsFullScreen = True;
+            #endif
         }
 
         /// <summary>
@@ -26,8 +43,13 @@ namespace GC_Final
         /// </summary>
         protected override void Initialize()
         {
+            camera = new Camera(new Vector3(0.5f, 0.5f, 0.5f), 0, GraphicsDevice.Viewport.AspectRatio, 0.05f, 100f);
+            effect = new BasicEffect(GraphicsDevice);
             // TODO: Add your initialization logic here
 
+            maze = new GC_Final.Maze(GraphicsDevice, Content.Load<Texture2D>(@"tex\MARBLE3"));
+            arena = new Arena(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxPlaza"), 100, 0);
+            skybox = new Skybox(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxPlaza"));
             base.Initialize();
         }
 
@@ -40,7 +62,13 @@ namespace GC_Final
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            clampTextureAddressMode = new SamplerState
+            {
+                AddressU = TextureAddressMode.Clamp,
+                AddressV = TextureAddressMode.Clamp
+            };
+
+            texture = Content.Load<Texture2D>(@"tex\FLOOR6_2");
         }
 
         /// <summary>
@@ -64,6 +92,90 @@ namespace GC_Final
 
             // TODO: Add your update logic here
 
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            KeyboardState keyState = Keyboard.GetState();
+            float moveAmount = 0;
+
+
+
+            if (keyState.IsKeyDown(Keys.D))
+            {
+                camera.Rotation = MathHelper.WrapAngle(
+                    camera.Rotation - (rotateScale * elapsed));
+            }
+
+            if (keyState.IsKeyDown(Keys.A))
+            {
+                camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
+
+            }
+            if (keyState.IsKeyDown(Keys.W))
+            {
+                //camera.MoveForward(moveScale * elapsed);
+                moveAmount = moveScale * elapsed;
+            }
+            if (keyState.IsKeyDown(Keys.S))
+            {
+                //camera.MoveForward(-moveScale * elapsed);
+                moveAmount = -moveScale * elapsed;
+            }
+            //if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            //{
+            //    modelManager.AddShot(camera.cameraPosition + new Vector3(0, -5, -1), camera.GetCameraDirection * shotSpeed);
+            //    //PlayCue("Shot");
+
+            //    shotCountdown = shotDelay;
+            //}
+            if (moveAmount != 0)
+            {
+                Vector3 newLocation = camera.PreviewMove(moveAmount);
+                bool moveOk = true;
+                if (newLocation.X < 0 || newLocation.X > Maze.mazeWidth)
+                    moveOk = false;
+                if (newLocation.Z < 0 || newLocation.Z > Maze.mazeHeight)
+                    moveOk = false;
+
+                foreach (BoundingBox box in maze.GetBoundsForCell((int)newLocation.X, (int)newLocation.Z))
+                {
+                    if (box.Contains(newLocation) == ContainmentType.Contains)
+                        moveOk = false;
+                }
+
+                if (moveOk)
+                    camera.MoveForward(moveAmount);
+            }
+
+            //if (cube.Bounds.Contains(camera.Position) == ContainmentType.Contains)
+            //{
+            //    cube.PositionCube(camera.Position, 5f);
+            //    float thisTime = (float)gameTime.TotalGameTime.TotalSeconds;
+            //    float scoreTime = thisTime - lastScoreTime;
+            //    score += 1000;
+            //    if (scoreTime < 120)
+            //    {
+            //        score += (120 - (int)scoreTime) * 100;
+            //    }
+            //    lastScoreTime = thisTime;
+            //}
+
+            //cube.Update(gameTime);
+
+            //if (gift.Bounds.Contains(camera.Position) == ContainmentType.Contains)
+            //{
+            //    gift.PositionGift(camera.Position, 5f);
+            //    float thisTime = (float)gameTime.TotalGameTime.TotalSeconds;
+            //    float scoreTime = thisTime - lastScoreTime;
+            //    score += 1000;
+            //    if (scoreTime < 120)
+            //    {
+            //        score += (120 - (int)scoreTime) * 100;
+            //    }
+            //    lastScoreTime = thisTime;
+            //}
+
+            //gift.Update(gameTime, camera, lastScoreTime, score);
+            //FireShots(gameTime);
+
             base.Update(gameTime);
         }
 
@@ -74,7 +186,9 @@ namespace GC_Final
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
+            maze.Draw(camera, effect);
+            arena.Draw(camera, effect);
+            skybox.Draw(camera, effect);
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
