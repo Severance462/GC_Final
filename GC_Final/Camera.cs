@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,15 +21,52 @@ namespace GC_Final
         private Vector3 baseCameraReference = new Vector3(0, 0, 1);
         private bool needViewResync = true;
 
+
+        float totalYaw = MathHelper.PiOver4 / 2;
+        float currentYaw = 0;
+        float totalPitch = MathHelper.PiOver4 / 2;
+        float currentPitch = 0;
+        Vector3 cameraUp;
+
+        MouseState prevMouseState;
+
         private Matrix cachedViewMatrix;
         #endregion
 
         #region Helper Methods
         private void UpdateLookAt()
         {
+            float yawAngle = (-MathHelper.PiOver4 / 150) * (Mouse.GetState().X - prevMouseState.X);
+
+            if (Math.Abs(currentYaw + yawAngle) < totalYaw)
+            {
+                cameraDirection = Vector3.Transform(cameraDirection,
+                    Matrix.CreateFromAxisAngle(cameraUp, yawAngle));
+                currentYaw += yawAngle;
+            }
+
+            // Pitch rotation
+            float pitchAngle = (MathHelper.PiOver4 / 150) *
+                (Mouse.GetState().Y - prevMouseState.Y);
+
+            if (Math.Abs(currentPitch + pitchAngle) < totalPitch)
+            {
+                cameraDirection = Vector3.Transform(cameraDirection,
+                    Matrix.CreateFromAxisAngle(
+                        Vector3.Cross(cameraUp, cameraDirection),
+                    pitchAngle));
+
+                currentPitch += pitchAngle;
+            }
+
+            // Reset prevMouseState
+            prevMouseState = Mouse.GetState();
+
+            Matrix rotMatrix = Matrix.CreateRotationX(rotation);
             Matrix rotationMatrix = Matrix.CreateRotationY(rotation);
-            Vector3 lookAtOffset = Vector3.Transform(baseCameraReference, rotationMatrix);
+            Vector3 lookAtOffset = Vector3.Transform(baseCameraReference, rotMatrix);
             lookAt = position + lookAtOffset;
+            //lookAt = position + lookAtOffset;
             needViewResync = true;
         }
 
@@ -48,9 +86,29 @@ namespace GC_Final
         public Vector3 PreviewStrafe(float scale)
         {
             Matrix rotate = Matrix.CreateRotationY(0f);
-            Vector3 forward = new Vector3(0, 0, scale);
+            Vector3 forward = new Vector3(scale, 0, 0);
+            KeyboardState keyState = Keyboard.GetState();
+
+            //if (keyState.IsKeyDown(Keys.A))
+            //{
+            //    forward = new Vector3(scale, 0, 0);
+            //}
+            //else if (keyState.IsKeyDown(Keys.A) && keyState.IsKeyDown(Keys.W))
+            //{
+            //    forward = new Vector3(scale, scale, 0);
+            //}
+            //else if (keyState.IsKeyDown(Keys.D))
+            //{
+            //    forward = new Vector3(scale, 0, 0);
+            //}
+            
             forward = Vector3.Transform(forward, rotate);
             return (position + forward);
+        }
+
+        public void MoveStrafe(float scale)
+        {
+            MoveTo(PreviewStrafe(scale), rotation);
         }
 
         public void MoveForward(float scale)
@@ -64,6 +122,8 @@ namespace GC_Final
             this.rotation = rotation;
             UpdateLookAt();
         }
+
+        
 
 
 

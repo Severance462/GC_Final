@@ -100,14 +100,14 @@ namespace GC_Final
 
             if (keyState.IsKeyDown(Keys.D))
             {
-                camera.Rotation = MathHelper.WrapAngle(
-                    camera.Rotation - (rotateScale * elapsed));
+                //camera.Rotation = MathHelper.WrapAngle(camera.Rotation - (rotateScale * elapsed));
+                moveAmount = moveScale * elapsed;
             }
 
             if (keyState.IsKeyDown(Keys.A))
             {
-                camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
-
+                //camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
+                moveAmount = moveScale * elapsed;
             }
             if (keyState.IsKeyDown(Keys.W))
             {
@@ -119,6 +119,13 @@ namespace GC_Final
                 //camera.MoveForward(-moveScale * elapsed);
                 moveAmount = -moveScale * elapsed;
             }
+
+            if (keyState.IsKeyDown(Keys.S) && keyState.IsKeyDown(Keys.W))
+            {
+                moveAmount = moveScale * elapsed;
+            }
+
+
             //if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             //{
             //    modelManager.AddShot(camera.cameraPosition + new Vector3(0, -5, -1), camera.GetCameraDirection * shotSpeed);
@@ -129,6 +136,12 @@ namespace GC_Final
             if (moveAmount != 0)
             {
                 Vector3 newLocation = camera.PreviewMove(moveAmount);
+
+                if (keyState.IsKeyDown(Keys.A) || (keyState.IsKeyDown(Keys.D)))
+                {
+                    newLocation = camera.PreviewStrafe(moveAmount);
+                }
+                
                 bool moveOk = true;
                 if (newLocation.X < 0 || newLocation.X > Maze.mazeWidth)
                     moveOk = false;
@@ -142,7 +155,26 @@ namespace GC_Final
                 }
 
                 if (moveOk)
-                    camera.MoveForward(moveAmount);
+                {
+                    if (keyState.IsKeyDown(Keys.A))
+                    {
+                        camera.MoveStrafe(moveAmount);
+                    }
+                    else if (keyState.IsKeyDown(Keys.D))
+                    {
+                        camera.MoveStrafe(-moveAmount);
+                    }
+                    else if (keyState.IsKeyDown(Keys.Q))
+                    {
+                        camera.MoveForward(moveAmount);
+                    }
+                    else if (keyState.IsKeyDown(Keys.E))
+                    {
+                        camera.MoveForward(moveAmount);
+                    }
+                    else
+                        camera.MoveForward(moveAmount);
+                }
             }
 
             //if (cube.Bounds.Contains(camera.Position) == ContainmentType.Contains)

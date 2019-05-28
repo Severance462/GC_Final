@@ -61,3 +61,15 @@
 /processorParam:TextureFormat=Color
 /build:tex/MARBLE3.png
 
+#begin tex/MARBLE3_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:tex/MARBLE3_1.png
+

@@ -27,6 +27,8 @@ namespace GC_Final
         Vector3[] wallPoints = new Vector3[8];
         Vector2[] texCords = new Vector2[4] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1) };
         public Texture2D texture;
+
+        bool remove = false; 
         //Color[] wallColors = new Color[4]
         //{
         //    Color.Red, Color.Orange, Color.Red, Color.Orange
@@ -101,8 +103,7 @@ namespace GC_Final
             {
                 for (int z = 0; z < mazeHeight; z++)
                 {
-                    foreach (VertexPositionTexture vertex
-                    in tBuildMazeWall(x, z))
+                    foreach (VertexPositionTexture vertex in tBuildMazeWall(x, z))
                     {
                         wallVertexList.Add(vertex);
                     }
@@ -117,49 +118,49 @@ namespace GC_Final
                 AddressU = TextureAddressMode.Clamp,
                 AddressV = TextureAddressMode.Clamp
             };
-            //texture = texture;
+            this.texture = texture;
 
 
         }
 
         private List<VertexPositionTexture> tBuildMazeWall(int x, int z)
         {
-            List<VertexPositionTexture> triangles = new
-            List<VertexPositionTexture>();
+            List<VertexPositionTexture> triangles = new List<VertexPositionTexture>();
             if (MazeCells[x, z].Walls[0])
             {
                 triangles.Add(tCalcPoint(0, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(4, x, z, texCords[2]));
+                triangles.Add(tCalcPoint(2, x, z, texCords[1]));
+
                 triangles.Add(tCalcPoint(4, x, z, texCords[0]));
-                triangles.Add(tCalcPoint(2, x, z, texCords[0]));
-                triangles.Add(tCalcPoint(4, x, z, texCords[0]));
-                triangles.Add(tCalcPoint(6, x, z, texCords[0]));
-                triangles.Add(tCalcPoint(2, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(6, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(2, x, z, texCords[3]));
             }
             if (MazeCells[x, z].Walls[1])
             {
-                triangles.Add(tCalcPoint(4, x, z, texCords[1]));
-                triangles.Add(tCalcPoint(5, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(4, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(5, x, z, texCords[2]));
                 triangles.Add(tCalcPoint(6, x, z, texCords[1]));
-                triangles.Add(tCalcPoint(5, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(5, x, z, texCords[0]));
                 triangles.Add(tCalcPoint(7, x, z, texCords[1]));
-                triangles.Add(tCalcPoint(6, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(6, x, z, texCords[3]));
             }
             if (MazeCells[x, z].Walls[2])
             {
-                triangles.Add(tCalcPoint(5, x, z, texCords[2]));
+                triangles.Add(tCalcPoint(5, x, z, texCords[0]));
                 triangles.Add(tCalcPoint(1, x, z, texCords[2]));
-                triangles.Add(tCalcPoint(7, x, z, texCords[2]));
-                triangles.Add(tCalcPoint(1, x, z, texCords[2]));
-                triangles.Add(tCalcPoint(3, x, z, texCords[2]));
-                triangles.Add(tCalcPoint(7, x, z, texCords[2]));
+                triangles.Add(tCalcPoint(7, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(1, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(3, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(7, x, z, texCords[3]));
             }
             if (MazeCells[x, z].Walls[3])
             {
-                triangles.Add(tCalcPoint(1, x, z, texCords[3]));
-                triangles.Add(tCalcPoint(0, x, z, texCords[3]));
-                triangles.Add(tCalcPoint(3, x, z, texCords[3]));
-                triangles.Add(tCalcPoint(0, x, z, texCords[3]));
-                triangles.Add(tCalcPoint(2, x, z, texCords[3]));
+                triangles.Add(tCalcPoint(1, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(0, x, z, texCords[2]));
+                triangles.Add(tCalcPoint(3, x, z, texCords[1]));
+                triangles.Add(tCalcPoint(0, x, z, texCords[0]));
+                triangles.Add(tCalcPoint(2, x, z, texCords[1]));
                 triangles.Add(tCalcPoint(3, x, z, texCords[3]));
             }
             return triangles;
@@ -273,6 +274,7 @@ namespace GC_Final
                 int pick = rand.Next(0, neighborCells.Count);
                 int selectedNeighbor = neighborCells[pick];
                 neighborCells.RemoveAt(pick);
+
                 Vector2 neighbor = cell;
                 switch (selectedNeighbor)
                 {
