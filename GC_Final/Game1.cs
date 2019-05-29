@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace GC_Final
 {
@@ -11,21 +12,32 @@ namespace GC_Final
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        Camera camera;
+        public Camera camera;
         Arena arena;
         Maze maze;
         Skybox skybox;
         BasicEffect effect;
         SamplerState clampTextureAddressMode;
         Texture2D texture;
+        ModelManager modelManager;
+        Texture2D crosshairTexture;
+        Texture2D controlsOverlayTexture;
 
+        public Random rnd { get; protected set; }
         float moveScale = 4.5f;
         float rotateScale = MathHelper.PiOver2 + 1;
+
+        float shotSpeed = 1;
+        int shotDelay = 300;
+        int shotCountdown = 0;
+        
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            rnd = new Random();
 
             graphics.PreferredBackBufferHeight = 720;
             graphics.PreferredBackBufferWidth = 1280;
@@ -48,8 +60,12 @@ namespace GC_Final
             // TODO: Add your initialization logic here
 
             maze = new GC_Final.Maze(GraphicsDevice, Content.Load<Texture2D>(@"tex\MARBLE3"));
-            arena = new Arena(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxPlaza"), 100, 0);
-            skybox = new Skybox(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxPlaza"));
+            //arena = new Arena(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxPlaza"), 100, 0);
+            skybox = new Skybox(GraphicsDevice, Content.Load<Texture2D>(@"tex\skyboxHell2"));
+
+            modelManager = new ModelManager(this);
+            Components.Add(modelManager);
+
             base.Initialize();
         }
 
@@ -64,11 +80,11 @@ namespace GC_Final
 
             clampTextureAddressMode = new SamplerState
             {
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp
+                AddressU = TextureAddressMode.Clamp, AddressV = TextureAddressMode.Clamp
             };
 
             texture = Content.Load<Texture2D>(@"tex\FLOOR6_2");
+            crosshairTexture = Content.Load<Texture2D>(@"textures\crosshair");
         }
 
         /// <summary>
@@ -92,10 +108,24 @@ namespace GC_Final
 
             // TODO: Add your update logic here
 
+            FireShots(gameTime);
+
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             KeyboardState keyState = Keyboard.GetState();
             float moveAmount = 0;
 
+
+            if (keyState.IsKeyDown(Keys.Q))
+            {
+                camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
+                //moveAmount = moveScale * elapsed;
+            }
+
+            if (keyState.IsKeyDown(Keys.E))
+            {
+                camera.Rotation = MathHelper.WrapAngle(camera.Rotation - (rotateScale * elapsed));
+                //moveAmount = moveScale * elapsed;
+            }
 
 
             if (keyState.IsKeyDown(Keys.D))
@@ -158,19 +188,27 @@ namespace GC_Final
                 {
                     if (keyState.IsKeyDown(Keys.A))
                     {
+                        //camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
                         camera.MoveStrafe(moveAmount);
                     }
                     else if (keyState.IsKeyDown(Keys.D))
                     {
+                        //camera.Rotation = MathHelper.WrapAngle(camera.Rotation - (rotateScale * elapsed));
                         camera.MoveStrafe(-moveAmount);
                     }
                     else if (keyState.IsKeyDown(Keys.Q))
                     {
-                        camera.MoveForward(moveAmount);
+                        camera.Rotation = MathHelper.WrapAngle(camera.Rotation + (rotateScale * elapsed));
+                        //camera.MoveForward(moveAmount);
                     }
                     else if (keyState.IsKeyDown(Keys.E))
                     {
+                        camera.Rotation = MathHelper.WrapAngle(camera.Rotation - (rotateScale * elapsed));
                         camera.MoveForward(moveAmount);
+                    }
+                    else if (keyState.IsKeyDown(Keys.Space))
+                    {
+                        camera.MoveJump(moveAmount);
                     }
                     else
                         camera.MoveForward(moveAmount);
@@ -219,11 +257,36 @@ namespace GC_Final
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             maze.Draw(camera, effect);
-            arena.Draw(camera, effect);
+            //arena.Draw(camera, effect);
             skybox.Draw(camera, effect);
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
+        }
+
+        protected void FireShots(GameTime gameTime)
+        {
+            //If enough time (delay) has passed
+            if (shotCountdown <= 0)
+            {
+                // Did player press space bar or left mouse button?
+                if (Keyboard.GetState().IsKeyDown(Keys.Space) ||
+                    Mouse.GetState().LeftButton == ButtonState.Pressed)
+                {
+                    // Add a shot to the model manager
+                    modelManager.AddShot(
+                        camera.cameraPosition + new Vector3(0, -5, 0),
+                        camera.GetCameraDirection * shotSpeed);
+
+                    // Play shot audio
+                    //PlayCue("Shot");
+
+                    // Reset the shot countdown to the delay value
+                    shotCountdown = shotDelay;
+                }
+            }
+            else
+                shotCountdown -= gameTime.ElapsedGameTime.Milliseconds;
         }
     }
 }

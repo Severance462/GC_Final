@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GC_Final
 {
-    public class Camera
+    public class Camera 
     {
         #region Fields
         private Vector3 position = Vector3.Zero;
@@ -64,7 +64,7 @@ namespace GC_Final
 
             Matrix rotMatrix = Matrix.CreateRotationX(rotation);
             Matrix rotationMatrix = Matrix.CreateRotationY(rotation);
-            Vector3 lookAtOffset = Vector3.Transform(baseCameraReference, rotMatrix);
+            Vector3 lookAtOffset = Vector3.Transform(baseCameraReference, rotationMatrix);
             lookAt = position + lookAtOffset;
             //lookAt = position + lookAtOffset;
             needViewResync = true;
@@ -89,18 +89,6 @@ namespace GC_Final
             Vector3 forward = new Vector3(scale, 0, 0);
             KeyboardState keyState = Keyboard.GetState();
 
-            //if (keyState.IsKeyDown(Keys.A))
-            //{
-            //    forward = new Vector3(scale, 0, 0);
-            //}
-            //else if (keyState.IsKeyDown(Keys.A) && keyState.IsKeyDown(Keys.W))
-            //{
-            //    forward = new Vector3(scale, scale, 0);
-            //}
-            //else if (keyState.IsKeyDown(Keys.D))
-            //{
-            //    forward = new Vector3(scale, 0, 0);
-            //}
             
             forward = Vector3.Transform(forward, rotate);
             return (position + forward);
@@ -123,7 +111,18 @@ namespace GC_Final
             UpdateLookAt();
         }
 
-        
+        public Vector3 PreviewJump(float scale)
+        {
+            Matrix rotate = Matrix.CreateRotationY(rotation);
+            Vector3 forward = new Vector3(0, scale, 0);
+            forward = Vector3.Transform(forward, rotate);
+            return (position + forward);
+        }
+
+        public void MoveJump(float scale)
+        {
+            MoveTo(PreviewJump(scale), rotation);
+        }
 
 
 
